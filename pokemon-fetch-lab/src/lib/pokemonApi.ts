@@ -48,6 +48,7 @@ export async function fetchPokemonByKeyword(keyword: string): Promise<Pokemon> {
   // 힌트:
   // - id: data.id
   // - name: formatPokemonName(data.name)
+  // - apiName: data.name
   // - image: data.sprites.other['official-artwork'].front_default
   // - height: `${(data.height / 10).toFixed(1)} m`
   // - weight: `${(data.weight / 10).toFixed(1)} kg`

@@ -1,22 +1,77 @@
 export const POKEMON_API_BASE_URL = 'https://pokeapi.co/api/v2/pokemon'
 
-export function buildPokemonUrl(keyword) {
+export type PokemonStat = {
+  name: string
+  value: number
+}
+
+export type Pokemon = {
+  id: number
+  name: string
+  apiName: string
+  image: string
+  height: string
+  weight: string
+  types: string[]
+  abilities: string[]
+  stats: PokemonStat[]
+}
+
+type PokemonApiTypeSlot = {
+  type: {
+    name: string
+  }
+}
+
+type PokemonApiAbilitySlot = {
+  ability: {
+    name: string
+  }
+}
+
+type PokemonApiStatSlot = {
+  base_stat: number
+  stat: {
+    name: string
+  }
+}
+
+type PokemonApiResponse = {
+  id: number
+  name: string
+  height: number
+  weight: number
+  sprites: {
+    front_default: string | null
+    other: {
+      'official-artwork': {
+        front_default: string | null
+      }
+      dream_world: {
+        front_default: string | null
+      }
+      home: {
+        front_default: string | null
+      }
+    }
+  }
+  types: PokemonApiTypeSlot[]
+  abilities: PokemonApiAbilitySlot[]
+  stats: PokemonApiStatSlot[]
+}
+
+export function buildPokemonUrl(keyword: string): string {
   const normalizedKeyword = keyword.trim().toLowerCase()
   return `${POKEMON_API_BASE_URL}/${encodeURIComponent(normalizedKeyword)}`
 }
 
-export async function fetchPokemonByKeyword(keyword) {
+export async function fetchPokemonByKeyword(keyword: string): Promise<Pokemon> {
   const normalizedKeyword = keyword.trim().toLowerCase()
 
   if (!normalizedKeyword) {
     throw new Error('포켓몬 이름이나 번호를 입력해 주세요.')
   }
 
-  // STUDENT TODO:
-  // 1. fetch로 PokeAPI에 GET 요청을 보냅니다.
-  // 2. response.ok가 false면 에러를 던집니다.
-  // 3. response.json()으로 JSON 데이터를 JavaScript 객체로 바꿉니다.
-  // 4. 화면에서 쓰기 좋은 모양으로 데이터를 정리해서 반환합니다.
   const response = await fetch(buildPokemonUrl(normalizedKeyword))
 
   if (!response.ok) {
@@ -27,11 +82,11 @@ export async function fetchPokemonByKeyword(keyword) {
     throw new Error(`API 요청에 실패했어요. HTTP ${response.status}`)
   }
 
-  const data = await response.json()
+  const data = (await response.json()) as PokemonApiResponse
   return normalizePokemon(data)
 }
 
-function normalizePokemon(data) {
+function normalizePokemon(data: PokemonApiResponse): Pokemon {
   const artwork = data.sprites.other['official-artwork'].front_default
   const dreamWorld = data.sprites.other.dream_world.front_default
   const homeSprite = data.sprites.other.home.front_default
@@ -41,7 +96,7 @@ function normalizePokemon(data) {
     id: data.id,
     name: formatPokemonName(data.name),
     apiName: data.name,
-    image: artwork ?? dreamWorld ?? homeSprite ?? frontSprite,
+    image: artwork ?? dreamWorld ?? homeSprite ?? frontSprite ?? '',
     height: `${(data.height / 10).toFixed(1)} m`,
     weight: `${(data.weight / 10).toFixed(1)} kg`,
     types: data.types.map((typeInfo) => typeInfo.type.name),
@@ -55,15 +110,15 @@ function normalizePokemon(data) {
   }
 }
 
-function formatPokemonName(name) {
+export function formatPokemonName(name: string): string {
   return name
     .split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
 }
 
-function formatStatName(name) {
-  const statNames = {
+export function formatStatName(name: string): string {
+  const statNames: Record<string, string> = {
     hp: 'HP',
     attack: 'Attack',
     defense: 'Defense',

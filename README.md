@@ -1,6 +1,6 @@
 # FE Networking July 3rd
 
-React에서 `fetch`로 공개 API에 요청을 보내고, 응답 JSON을 해체해서 화면에 표시하는 실습 자료입니다.
+Vite + React + TypeScript에서 `fetch`로 공개 API에 요청을 보내고, 응답 JSON을 해체해서 화면에 표시하는 실습 자료입니다.
 
 ## 폴더 구조
 
@@ -27,7 +27,7 @@ npm run dev
 
 ## 실습 핵심
 
-`pokemon-fetch-lab/src/lib/pokemonApi.js`의 `fetchPokemonByKeyword` 함수를 완성합니다.
+`pokemon-fetch-lab/src/lib/pokemonApi.ts`의 `fetchPokemonByKeyword` 함수를 완성합니다.
 
 구현할 내용:
 

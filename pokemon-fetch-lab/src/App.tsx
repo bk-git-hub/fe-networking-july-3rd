@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import type { CSSProperties, Dispatch, FormEvent, SetStateAction } from 'react'
 import { buildPokemonUrl, fetchPokemonByKeyword } from './lib/pokemonApi'
+import type { Pokemon, PokemonStat } from './lib/pokemonApi'
 
 const RANDOM_MAX_ID = 1025
 
@@ -14,7 +16,7 @@ const lessonSteps = [
   'return한 객체를 화면에 띄우기',
 ]
 
-const typeColorMap = {
+const typeColorMap: Record<string, string> = {
   bug: '#8cb230',
   dark: '#58575f',
   dragon: '#0f6ac0',
@@ -35,18 +37,32 @@ const typeColorMap = {
   water: '#4a90da',
 }
 
+type LastRequestStatus = 'Ready' | 'Pending' | '200 OK' | 'Failed'
+
+type LastRequest = {
+  method: 'GET'
+  url: string
+  status: LastRequestStatus
+}
+
+type StatusTone = 'ready' | 'pending' | 'success' | 'failed'
+
+type TypeColorStyle = CSSProperties & {
+  '--type-color': string
+}
+
 function App() {
   const [query, setQuery] = useState('pikachu')
-  const [pokemon, setPokemon] = useState(null)
+  const [pokemon, setPokemon] = useState<Pokemon | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [lastRequest, setLastRequest] = useState({
+  const [lastRequest, setLastRequest] = useState<LastRequest>({
     method: 'GET',
     url: buildPokemonUrl('pikachu'),
     status: 'Ready',
   })
 
-  async function requestPokemon(nextQuery) {
+  async function requestPokemon(nextQuery: string) {
     const keyword = nextQuery.trim()
 
     if (!keyword) {
@@ -72,7 +88,11 @@ function App() {
       })
     } catch (requestError) {
       setPokemon(null)
-      setError(requestError.message)
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : '알 수 없는 요청 오류가 발생했어요.',
+      )
       setLastRequest({
         method: 'GET',
         url: buildPokemonUrl(keyword),
@@ -83,7 +103,7 @@ function App() {
     }
   }
 
-  function handleSubmit(event) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     requestPokemon(query)
   }
@@ -94,7 +114,7 @@ function App() {
     requestPokemon(randomId)
   }
 
-  function handleSuggestionClick(suggestion) {
+  function handleSuggestionClick(suggestion: string) {
     setQuery(suggestion)
     requestPokemon(suggestion)
   }
@@ -153,6 +173,17 @@ function AppHeader() {
   )
 }
 
+type SearchPanelProps = {
+  error: string
+  loading: boolean
+  onRandomClick: () => void
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  onSuggestionClick: (suggestion: string) => void
+  query: string
+  setQuery: Dispatch<SetStateAction<string>>
+  suggestions: string[]
+}
+
 function SearchPanel({
   error,
   loading,
@@ -162,7 +193,7 @@ function SearchPanel({
   query,
   setQuery,
   suggestions,
-}) {
+}: SearchPanelProps) {
   return (
     <section className="search-panel" aria-labelledby="search-title">
       <div>
@@ -228,7 +259,13 @@ function SearchPanel({
   )
 }
 
-function PokemonCard({ error, loading, pokemon }) {
+type PokemonCardProps = {
+  error: string
+  loading: boolean
+  pokemon: Pokemon | null
+}
+
+function PokemonCard({ error, loading, pokemon }: PokemonCardProps) {
   if (loading) {
     return <LoadingCard />
   }
@@ -245,10 +282,7 @@ function PokemonCard({ error, loading, pokemon }) {
 
   return (
     <section className="pokemon-card" aria-label={`${pokemon.name} detail card`}>
-      <div
-        className="pokemon-art-panel"
-        style={{ '--type-color': getTypeColor(mainType) }}
-      >
+      <div className="pokemon-art-panel" style={getTypeColorStyle(mainType)}>
         <span className="pokemon-number">#{String(pokemon.id).padStart(4, '0')}</span>
         <img src={pokemon.image} alt={`${pokemon.name} artwork`} />
       </div>
@@ -332,15 +366,23 @@ function EmptyCard() {
   )
 }
 
-function TypePill({ type }) {
+type TypePillProps = {
+  type: string
+}
+
+function TypePill({ type }: TypePillProps) {
   return (
-    <span className="type-pill" style={{ '--type-color': getTypeColor(type) }}>
+    <span className="type-pill" style={getTypeColorStyle(type)}>
       {type}
     </span>
   )
 }
 
-function StatBar({ stat }) {
+type StatBarProps = {
+  stat: PokemonStat
+}
+
+function StatBar({ stat }: StatBarProps) {
   const safeValue = Math.min(stat.value, 180)
   const width = `${Math.round((safeValue / 180) * 100)}%`
 
@@ -355,7 +397,12 @@ function StatBar({ stat }) {
   )
 }
 
-function StatusPanel({ lastRequest, statusTone }) {
+type StatusPanelProps = {
+  lastRequest: LastRequest
+  statusTone: StatusTone
+}
+
+function StatusPanel({ lastRequest, statusTone }: StatusPanelProps) {
   return (
     <section className="rail-panel" aria-labelledby="api-status-title">
       <div className="rail-heading">
@@ -384,7 +431,11 @@ function StatusPanel({ lastRequest, statusTone }) {
   )
 }
 
-function TodoPanel({ steps }) {
+type TodoPanelProps = {
+  steps: string[]
+}
+
+function TodoPanel({ steps }: TodoPanelProps) {
   return (
     <section className="rail-panel todo-panel" aria-labelledby="todo-title">
       <div className="rail-heading">
@@ -406,11 +457,21 @@ function TodoPanel({ steps }) {
   )
 }
 
-function getTypeColor(type) {
+function getTypeColor(type: string): string {
   return typeColorMap[type] ?? '#2a75bb'
 }
 
-function getStatusTone(status, loading, error) {
+function getTypeColorStyle(type: string): TypeColorStyle {
+  return {
+    '--type-color': getTypeColor(type),
+  }
+}
+
+function getStatusTone(
+  status: LastRequestStatus,
+  loading: boolean,
+  error: string,
+): StatusTone {
   if (loading || status === 'Pending') {
     return 'pending'
   }

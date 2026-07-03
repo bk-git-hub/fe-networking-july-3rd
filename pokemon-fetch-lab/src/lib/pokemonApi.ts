@@ -1,11 +1,28 @@
 export const POKEMON_API_BASE_URL = 'https://pokeapi.co/api/v2/pokemon'
 
-export function buildPokemonUrl(keyword) {
+export type PokemonStat = {
+  name: string
+  value: number
+}
+
+export type Pokemon = {
+  id: number
+  name: string
+  apiName: string
+  image: string
+  height: string
+  weight: string
+  types: string[]
+  abilities: string[]
+  stats: PokemonStat[]
+}
+
+export function buildPokemonUrl(keyword: string): string {
   const normalizedKeyword = keyword.trim().toLowerCase()
   return `${POKEMON_API_BASE_URL}/${encodeURIComponent(normalizedKeyword)}`
 }
 
-export async function fetchPokemonByKeyword(keyword) {
+export async function fetchPokemonByKeyword(keyword: string): Promise<Pokemon> {
   const normalizedKeyword = keyword.trim().toLowerCase()
 
   if (!normalizedKeyword) {
@@ -39,19 +56,19 @@ export async function fetchPokemonByKeyword(keyword) {
   // - stats: data.stats.map((statInfo) => ({ name: formatStatName(statInfo.stat.name), value: statInfo.base_stat }))
 
   throw new Error(
-    '아직 통신 코드가 비어 있어요. src/lib/pokemonApi.js의 STUDENT TODO를 완성해 주세요.',
+    '아직 통신 코드가 비어 있어요. src/lib/pokemonApi.ts의 STUDENT TODO를 완성해 주세요.',
   )
 }
 
-export function formatPokemonName(name) {
+export function formatPokemonName(name: string): string {
   return name
     .split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
 }
 
-export function formatStatName(name) {
-  const statNames = {
+export function formatStatName(name: string): string {
+  const statNames: Record<string, string> = {
     hp: 'HP',
     attack: 'Attack',
     defense: 'Defense',
